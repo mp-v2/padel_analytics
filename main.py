@@ -173,6 +173,7 @@ if __name__ == "__main__":
         start=0,
         end=MAX_FRAMES,
         collect_data=COLLECT_DATA,
+        collect_pose=COLLECT_POSE,
     )
 
     runner.run()

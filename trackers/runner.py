@@ -13,6 +13,7 @@ import supervision as sv
 from trackers.players_tracker.players_tracker import Players
 from trackers.ball_tracker.ball_tracker import Ball
 from trackers.keypoints_tracker.keypoints_tracker import Keypoints
+from trackers.players_keypoints_tracker.players_keypoints_tracker import PlayersKeypoints
 from trackers.tracker import Tracker
 from analytics import ProjectedCourt, DataAnalytics
 
@@ -32,6 +33,7 @@ class TrackingRunner:
         end: indicates the ending position at which video should stop generating frames.
              If None, video will be read to the end.   
         collect_data: True to collect data from projected court
+        collect_pose: True to also collect players pose keypoints
     """
 
     def __init__(
@@ -41,7 +43,8 @@ class TrackingRunner:
         inference_path: str | Path,
         start: int = 0,
         end: Optional[int] = None,
-        collect_data: bool = False, 
+        collect_data: bool = False,
+        collect_pose: bool = True,
     ) -> None:
     
         self.video_path = video_path
@@ -74,7 +77,7 @@ class TrackingRunner:
         self.projected_court = ProjectedCourt(self.video_info)
         if collect_data:
             print("runner: Ready for data collection")
-            self.data_analytics = DataAnalytics()
+            self.data_analytics = DataAnalytics(collect_pose=collect_pose)
         else:
             self.data_analytics = None
     
@@ -128,6 +131,7 @@ class TrackingRunner:
             players_detection = None
             ball_detection = None
             keypoints_detection = None
+            players_keypoints_detection = None
             for tracker in self.trackers.values():
                 
                 try:
@@ -144,12 +148,15 @@ class TrackingRunner:
                     ball_detection = deepcopy(prediction)
                 elif tracker.object() == Keypoints:
                     keypoints_detection = deepcopy(prediction)
-               
+                elif tracker.object() == PlayersKeypoints:
+                    players_keypoints_detection = deepcopy(prediction)
+
             output_frame, self.data_analytics = self.projected_court.draw_projections_and_collect_data(
                 frame_rgb,
                 keypoints_detection=keypoints_detection,
                 players_detection=players_detection,
                 ball_detection=ball_detection,
+                players_keypoints_detection=players_keypoints_detection,
                 data_analytics=self.data_analytics,
                 is_fixed_keypoints=self.is_fixed_keypoints,
             )

@@ -10,6 +10,9 @@ OUTPUT_VIDEO_PATH = "results.mp4"
 COLLECT_DATA = True
 # Collected data path
 COLLECT_DATA_PATH = "data.csv"
+# True to also collect players pose keypoints. Adds 13 keypoints x 2 coordinates
+# x 4 players of columns, so turn it off if you only need positions/velocities.
+COLLECT_POSE = True
 
 # Maximum number of frames to be analysed
 MAX_FRAMES = None

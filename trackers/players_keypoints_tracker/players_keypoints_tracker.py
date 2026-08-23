@@ -8,6 +8,7 @@ from PIL import Image
 from ultralytics import YOLO
 import supervision as sv
 
+from constants import POSE_KEYPOINT_NAMES
 from trackers.tracker import Object, Tracker, NoPredictFrames
 
 
@@ -62,21 +63,7 @@ class PlayerKeypoints:
     Player collection of pose keypoints
     """
 
-    KEYPOINTS_NAMES = [
-        "left_foot",
-        "right_foot",
-        "torso",
-        "right_shoulder",
-        "left_shoulder",
-        "head",
-        "neck",
-        "left_hand",
-        "right_hand",
-        "right_knee",
-        "left_knee",
-        "right_elbow",
-        "left_elbow",
-    ]
+    KEYPOINTS_NAMES = POSE_KEYPOINT_NAMES
 
     CONNECTIONS = [
         ("left_foot", "left_knee"),
