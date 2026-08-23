@@ -30,6 +30,19 @@ pip install -r requirements.txt
 #### 3. Install pytorch <https://pytorch.org/get-started/locally/>.
 #### 4. Download weights.
    The current model weights used are available here https://drive.google.com/drive/folders/1joO7w1Am7B418SIqGBq90YipQl81FMzh?usp=drive_link. Configure the config.py file with your own model checkpoints paths. 
+
+   **Note on `TrackNet_best.pt` (ball detection).** That file is missing from the
+   shared Drive folder (upstream issue #26). It is not a padel-specific model:
+   the ball tracker is stock [TrackNetV3](https://github.com/qaz812345/TrackNetV3),
+   and the `InpaintNet_best.pt` in the shared folder is byte-identical
+   (sha256 `5749b66b8002f3ad9e0af841604004706fc796df30599e6bf01952696009688c`)
+   to the one published there. Download the TrackNetV3 checkpoint bundle from
+   that repo and copy `TrackNet_best.pt` into `./weights/ball_detection/`, then
+   set `ENABLE_BALL_TRACKER = True` in `config.py`.
+
+   These checkpoints are trained on badminton, but transfer well to padel: on
+   `examples/videos/rally.mp4` the ball is detected in 96.9% of frames (314/324)
+   as a single unbroken track, with a median frame-to-frame displacement of 22px.
 # Inference
 At the root of this repo, edit the file config.py accordingly and run:
 ````

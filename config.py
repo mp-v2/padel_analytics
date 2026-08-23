@@ -34,9 +34,11 @@ PLAYERS_KEYPOINTS_TRACKER_SAVE_PATH = "./cache/players_keypoints_detections.json
 
 # Ball tracker
 # TrackNet_best.pt is missing from the shared weights folder (see
-# https://github.com/Joao-M-Silva/padel_analytics/issues/26). Set to True once
-# the weight file is available.
-ENABLE_BALL_TRACKER = False
+# https://github.com/Joao-M-Silva/padel_analytics/issues/26). Recovered from the
+# upstream TrackNetV3 checkpoints (https://github.com/qaz812345/TrackNetV3) --
+# the InpaintNet_best.pt in the shared folder is byte-identical to theirs, so
+# these are the stock (badminton-trained) weights this code expects.
+ENABLE_BALL_TRACKER = True
 BALL_TRACKER_MODEL = "./weights/ball_detection/TrackNet_best.pt"
 BALL_TRACKER_INPAINT_MODEL = "./weights/ball_detection/InpaintNet_best.pt"
 BALL_TRACKER_BATCH_SIZE = 8
