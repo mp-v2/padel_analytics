@@ -18,7 +18,7 @@ COLLECT_POSE = True
 MAX_FRAMES = None
 
 # Fixed court keypoints´
-FIXED_COURT_KEYPOINTS_LOAD_PATH = "./cache/fixed_keypoints_detection.json"
+FIXED_COURT_KEYPOINTS_LOAD_PATH = None #"./cache/fixed_keypoints_detection.json"
 FIXED_COURT_KEYPOINTS_SAVE_PATH = "./cache/fixed_keypoints_detection.json"
 
 # Players tracker
