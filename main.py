@@ -144,15 +144,18 @@ if __name__ == "__main__":
         save_path=PLAYERS_KEYPOINTS_TRACKER_SAVE_PATH,
     )
   
-    ball_tracker = BallTracker(
-        BALL_TRACKER_MODEL,
-        BALL_TRACKER_INPAINT_MODEL,
-        batch_size=BALL_TRACKER_BATCH_SIZE,
-        median_max_sample_num=BALL_TRACKER_MEDIAN_MAX_SAMPLE_NUM,
-        median=None,
-        load_path=BALL_TRACKER_LOAD_PATH,
-        save_path=BALL_TRACKER_SAVE_PATH,
-    )
+    if ENABLE_BALL_TRACKER:
+        ball_tracker = BallTracker(
+            BALL_TRACKER_MODEL,
+            BALL_TRACKER_INPAINT_MODEL,
+            batch_size=BALL_TRACKER_BATCH_SIZE,
+            median_max_sample_num=BALL_TRACKER_MEDIAN_MAX_SAMPLE_NUM,
+            median=None,
+            load_path=BALL_TRACKER_LOAD_PATH,
+            save_path=BALL_TRACKER_SAVE_PATH,
+        )
+    else:
+        ball_tracker = None
 
     keypoints_tracker = KeypointsTracker(
         model_path=KEYPOINTS_TRACKER_MODEL,
@@ -163,18 +166,18 @@ if __name__ == "__main__":
         save_path=KEYPOINTS_TRACKER_SAVE_PATH,
     )
 
+    trackers = [players_tracker, player_keypoints_tracker, keypoints_tracker]
+    if ball_tracker is not None:
+        trackers.append(ball_tracker)
+
     runner = TrackingRunner(
-        trackers=[
-            players_tracker, 
-            player_keypoints_tracker, 
-            ball_tracker,
-            keypoints_tracker,    
-        ],
+        trackers=trackers,
         video_path=INPUT_VIDEO_PATH,
         inference_path=OUTPUT_VIDEO_PATH,
         start=0,
         end=MAX_FRAMES,
         collect_data=COLLECT_DATA,
+        collect_pose=COLLECT_POSE,
     )
 
     runner.run()

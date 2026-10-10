@@ -211,7 +211,6 @@ if upload_video or st.session_state["video"] is not None:
                     ),
                     axis=0
                 ),
-                frame_resolution_wh=video_info.resolution_wh,
             )
 
             # Instantiate trackers

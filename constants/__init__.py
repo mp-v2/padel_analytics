@@ -5,3 +5,4 @@ from .court_dimensions import (
     NET_SIDE_LINE,
 )
 from .player_heights import *
+from .pose_keypoints import POSE_KEYPOINT_NAMES

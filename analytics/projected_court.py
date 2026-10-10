@@ -587,23 +587,93 @@ class ProjectedCourt:
         
         return frame
     
-    def draw_projected_ball(
+    def draw_projected_ball_and_collect_data(
         self,
         frame: np.ndarray,
         ball_detection: Ball,
         homography_matrix: np.ndarray,
-        
+        data_analytics: DataAnalytics = None,
     ) -> np.ndarray:
         """
         Project and draw ball
         """
-        
+
         projected_ball = self.project_ball(
             ball_detection=ball_detection,
             homography_matrix=homography_matrix,
         )
 
+        if data_analytics is not None:
+            shifted_projected_ball_pos = self.court_keypoints.shift_point_origin(
+                point=tuple(float(v) for v in projected_ball.projection),
+                dimension="meters",
+            )
+            data_analytics.add_ball_position(
+                position=tuple(float(v) for v in projected_ball.xy),
+                visibility=int(projected_ball.visibility),
+                projection=shifted_projected_ball_pos,
+            )
+
         return projected_ball.draw_projection(frame)
+
+    @staticmethod
+    def collect_players_pose(
+        players_detection: Players,
+        players_keypoints: "PlayersKeypoints",
+        data_analytics: DataAnalytics,
+    ) -> None:
+        """
+        Attribute each pose detection to a tracked player and collect it
+
+        Pose detections carry no player id -- PlayerKeypoint.id identifies the
+        joint, not the person -- and they arrive in an arbitrary order, so each
+        pose is matched to the player bounding box containing most of its
+        keypoints. Matches are assigned best-first, one pose per player.
+
+        Keypoints are collected in video frame pixels, see PlayerPose.
+        """
+
+        candidates = []
+        for pose_index, player_keypoints in enumerate(players_keypoints):
+            keypoints = [
+                (keypoint.name, keypoint.xy)
+                for keypoint in player_keypoints
+            ]
+            for player_detection in players_detection:
+                if player_detection.id is None:
+                    continue
+
+                x0, y0 = player_detection.top_left
+                x1, y1 = player_detection.bottom_right
+                contained = sum(
+                    1
+                    for _, (x, y) in keypoints
+                    if x0 <= x <= x1 and y0 <= y <= y1
+                )
+                if contained:
+                    candidates.append(
+                        (contained, pose_index, player_detection.id, keypoints),
+                    )
+
+        candidates.sort(key=lambda x: x[0], reverse=True)
+
+        assigned_poses = set()
+        assigned_players = set()
+        for contained, pose_index, player_id, keypoints in candidates:
+            if pose_index in assigned_poses or player_id in assigned_players:
+                continue
+
+            # A pose sharing only a couple of keypoints with a box is more
+            # likely a neighbouring player overlapping it than a real match
+            if contained < 3:
+                continue
+
+            assigned_poses.add(pose_index)
+            assigned_players.add(player_id)
+            data_analytics.add_player_pose(
+                id=player_id,
+                keypoints={name: tuple(float(v) for v in xy) for name, xy in keypoints},
+            )
 
     def draw_projections_and_collect_data(
         self, 
@@ -611,6 +681,7 @@ class ProjectedCourt:
         keypoints_detection: Keypoints,
         players_detection: Optional[Players],
         ball_detection: Optional[Ball],
+        players_keypoints_detection: Optional["PlayersKeypoints"] = None,
         data_analytics: Optional[DataAnalytics] = None,
         is_fixed_keypoints: bool = False,
     ) -> tuple[np.ndarray, DataAnalytics]:
@@ -622,7 +693,8 @@ class ProjectedCourt:
             frame: video frame 
             keypoints_detection: court keypoints detection
             players_detection: players bounding box detection
-            ball_detection: ball position 
+            ball_detection: ball position
+            players_keypoints_detection: players pose keypoints detection
             data_analytics: instance for data collection
             is_fixed_keypoints: True if the keypoints detection is fixed
         """
@@ -657,13 +729,26 @@ class ProjectedCourt:
             print("projected_court: Missing data for players projection")
 
         if self.H is not None and ball_detection:
-            output_frame = self.draw_projected_ball(
+            output_frame = self.draw_projected_ball_and_collect_data(
                 output_frame,
                 ball_detection=ball_detection,
                 homography_matrix=self.H,
+                data_analytics=data_analytics,
             )
         else:
             print("projected_court: Missing data for ball projection")
+
+        if (
+            data_analytics is not None
+            and data_analytics.collect_pose
+            and players_detection
+            and players_keypoints_detection
+        ):
+            self.collect_players_pose(
+                players_detection=players_detection,
+                players_keypoints=players_keypoints_detection,
+                data_analytics=data_analytics,
+            )
 
         return output_frame, data_analytics
 
